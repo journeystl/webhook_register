@@ -4,6 +4,14 @@
  * Implements hook_menu().
  */
 function webhook_register_menu() {
+  // Show all improters.
+  $items['admin/webhook-register/importers'] = array(
+    'title' => 'Webhook Register',
+    'page callback' => 'webhook_register_importers',
+    'access arguments' => array('manage webhook_register'),
+    'file' => 'includes/importer.admin.inc',
+  );
+
   // Add/edit an importer.
   $items['admin/webhook-register/importer'] = array(
     'page callback' => 'drupal_get_form',

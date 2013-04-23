@@ -1,6 +1,34 @@
 <?php
 
 /**
+ * Show all importers.
+ */
+function webhook_register_importers() {
+  $page = array();
+
+  $page['new_importer']['#markup'] = l('New Importer', 'admin/webhook-register/importer', array('attributes' => array('class' => array('button'))));
+
+  // Get all importers.
+  $importers = db_query("SELECT id, name FROM webhook_register_importer ORDER BY name DESC")->fetchAll();
+  $rows = array();
+  foreach ($importers as $importer) {
+    $rows[] = array(
+      $importer->id,
+      $importer->name,
+      l('Edit', "admin/webhook-register/importer/{$importer->id}"),
+    );
+  }
+
+  $page['table'] = array(
+    '#theme' => 'table',
+    '#header' => array('ID', 'Name', 'Edit'),
+    '#rows' => $rows,
+  );
+
+  return $page;
+}
+
+/**
  * Manage an importer.
  */
 function webhook_register_importer_admin_form($form, &$form_state, $importer_id = NULL) {
