@@ -31,7 +31,7 @@ function webhook_register_schema() {
   $schema['webhook_register_importer'] = array(
     'fields' => array(
       'id' => array(
-        'type' => 'int',
+        'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),

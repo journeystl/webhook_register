@@ -4,12 +4,29 @@
  * Implements hook_menu().
  */
 function webhook_register_menu() {
-  // Show all improters.
+  // Configure webhook_register.
+  $items['admin/webhook-register'] = array(
+    'title' => 'Configure',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('webhook_register_config_form'),
+    'access arguments' => array('manage webhook_register'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/webhook-register/config'] = array(
+    'title' => 'Configure',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('webhook_register_config_form'),
+    'access arguments' => array('manage webhook_register'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  // Show all importers.
   $items['admin/webhook-register/importers'] = array(
-    'title' => 'Webhook Register',
+    'title' => 'Importers',
     'page callback' => 'webhook_register_importers',
     'access arguments' => array('manage webhook_register'),
     'file' => 'includes/importer.admin.inc',
+    'type' => MENU_LOCAL_TASK,
   );
 
   // Add/edit an importer.
@@ -50,4 +67,28 @@ function webhook_register_permission() {
 function webhook_register_node_delete($node) {
   // When nodes are deleted, delete their entries in the webhook_register_hash table.
   db_delete('webhook_register_hash')->condition('nid', $node->nid)->execute();
+}
+
+/**
+ * Configure webhook_register.
+ */
+function webhook_register_config_form($form, &$form_state) {
+  $form['api_key'] = array(
+    '#type' => 'textfield',
+    '#title' => 'API Key',
+    '#description' => 'The API key will be given to you when you register this importer with Patchbay Webhooks',
+    '#default_value' => variable_get('webhook_register_api_key', ''),
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Save',
+  );
+
+  return $form;
+}
+
+function webhook_register_config_form_submit(&$form, &$form_state) {
+  variable_set('webhook_register_api_key', $form_state['values']['api_key']);
+  drupal_set_message('Configuration saved.');
 }
