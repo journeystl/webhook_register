@@ -1,0 +1,5 @@
+name = Webhook Register
+description = Register a URL to receive $_POST data from Patchbay Webhooks.
+package = The Journey
+core = 7.x
+version = 1.0

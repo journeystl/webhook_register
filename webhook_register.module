@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */
+function webhook_register_menu() {
+  // Add/edit an importer.
+  $items['admin/webhook-register/importer'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('webhook_register_importer_admin_form'),
+    'access arguments' => array('manage webhook_register'),
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/importer.admin.inc',
+  );
+
+  // Webhook receive URL. Accept a new piece of data from Patchbay.
+  $items['webhook-register/receive'] = array(
+    'page callback' => 'webhook_register_receive_data',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/receive-data.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function webhook_register_permission() {
+  return array(
+    'manage webhook_register' =>  array(
+      'title' => 'Manage Webhook Register Importers',
+      'description' => '',
+    ),
+  );
+}
+
+/**
+ * Implements hook_node_delete().
+ */
+function webhook_register_node_delete($node) {
+  // When nodes are deleted, delete their entries in the webhook_register_hash table.
+  db_delete('webhook_register_hash')->condition('nid', $node->nid)->execute();
+}
