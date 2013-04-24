@@ -79,6 +79,16 @@ function webhook_register_node_delete($node) {
  * Configure webhook_register.
  */
 function webhook_register_config_form($form, &$form_state) {
+  $form['register_url'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Register URL',
+    '#default_value' => url('webhook-register/receive', array('absolute' => TRUE)),
+    '#attributes' => array(
+      'disabled' => 'disabled',
+    ),
+    '#description' => 'The URL to register with Patchbay Webhooks.',
+  );
+
   $form['api_key'] = array(
     '#type' => 'textfield',
     '#title' => 'API Key',

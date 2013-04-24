@@ -4,6 +4,16 @@
  * Receive $_POST data from a webhook.
  */
 function webhook_register_receive_data() {
+  // Require $_POST data.
+  if (!isset($_POST['data'])) {
+    return MENU_NOT_FOUND;
+  }
+
+  // Require properly signed $_POST data.
+  if (!isset($_POST['signed']) || !_webhook_register_verify_data($_POST)) {
+    return MENU_ACCESS_DENIED;
+  }
+
   // Load jsonPath and convert the json data into a usable array.
   require(__DIR__ . '/../jsonpath-0.8.1.php');
   $raw = $_POST['data'];
@@ -151,6 +161,10 @@ function webhook_register_receive_data() {
   exit();
 }
 
+/**
+ * Save a file from a given URL and return a file object.
+ * TODO this should support a directory param.
+ */
 function webhook_register_receive_data_saveFile($url) {
   $return = array();
 
@@ -170,4 +184,12 @@ function webhook_register_receive_data_saveFile($url) {
   return $return;
 }
 
-
+/**
+ * Verify that $_POST data is signed using the proper API key.
+ * @param $_POST data containing both a 'data' and a 'signed' value.
+ */
+function _webhook_register_verify_data($post) {
+  $key = variable_get('webhook_register_api_key');
+  $signed = hash_hmac('sha256', $post['data'], $key);
+  return ($signed === $post['signed']);
+}
