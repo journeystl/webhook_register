@@ -6,32 +6,55 @@
 function webhook_register_importers() {
   $page = array();
 
-  $page['new_importer']['#markup'] = l('New Importer', 'admin/webhook-register/importer', array('attributes' => array('class' => array('button'))));
+  $page['new_importer']['#markup'] = '<p>' . l('New Importer', 'admin/config/services/webhook-register/importer', array('attributes' => array('class' => array('button')))) . '</p>';
 
   // Get all importers.
   $importers = db_query("SELECT id, name FROM webhook_register_importer ORDER BY name DESC")->fetchAll();
-  $rows = array();
-  foreach ($importers as $importer) {
-    $rows[] = array(
-      $importer->id,
-      $importer->name,
-      l('Edit', "admin/webhook-register/importer/{$importer->id}"),
-    );
-  }
 
   $page['table'] = array(
     '#theme' => 'table',
-    '#header' => array('ID', 'Name', 'Edit'),
-    '#rows' => $rows,
+    '#header' => array('ID', 'Name', 'Actions'),
+    '#rows' => array(),
   );
 
+  foreach ($importers as $importer) {
+    $page['table']['#rows'][] = array(
+      $importer->id,
+      $importer->name,
+      implode(', ', array(
+        l('Edit', "admin/config/services/webhook-register/importer/{$importer->id}"),
+        l('History', "admin/config/services/webhook-register/history/{$importer->id}"),
+        l('Delete', "admin/config/services/webhook-register/importer/{$importer->id}/delete"),
+      )),
+    );
+  }
+
   return $page;
+}
+
+function webhook_register_importer_delete_submit($form, &$form_state) {
+  db_query("DELETE FROM webhook_register_importer WHERE id = :importer_id", array(':importer_id' => $form['#importer_id']));
+  drupal_set_message('Importer deleted.');
+  $form_state['redirect'] = 'admin/config/services/webhook-register/importers';
 }
 
 /**
  * Manage an importer.
  */
-function webhook_register_importer_admin_form($form, &$form_state, $importer_id = NULL) {
+function webhook_register_importer_admin_form($form, &$form_state, $importer_id = NULL, $action = NULL) {
+  if ($action && $action === 'delete') {
+    if ($importer_id) {
+      $importer_name = db_query("SELECT name FROM webhook_register_importer WHERE id = :importer_id", array(':importer_id' => $importer_id))->fetchColumn();
+      $question = "Are you sure you want to delete the importer <em>{$importer_name}</em>";
+      $form['#importer_id'] = $importer_id;
+      $form['#submit'] = array('webhook_register_importer_delete_submit');
+      return confirm_form($form, $question, 'admin/config/services/webhook-register/importers');
+    } else {
+      drupal_set_message("No importer specified.", 'error');
+      return array();
+    }
+  }
+
   // Load the importer.
   if ($importer_id) {
     $form['#importer'] = db_query("SELECT * FROM webhook_register_importer WHERE id = :importer_id", array(':importer_id' => $importer_id))->fetch();
@@ -41,6 +64,8 @@ function webhook_register_importer_admin_form($form, &$form_state, $importer_id 
     $form_state['#node_type'] = $form['#importer']->node_type;
     $importer_settings = unserialize($form['#importer']->settings);
     drupal_set_title('Editing Importer: <em>' . check_plain($form['#importer']->name) . '</em>', PASS_THROUGH);
+  } else {
+    drupal_set_title('Create New Importer');
   }
 
   // Get the current field count.
@@ -61,13 +86,20 @@ function webhook_register_importer_admin_form($form, &$form_state, $importer_id 
     '#default_value' => (isset($form['#importer'])) ? $form['#importer']->name : NULL,
   );
 
+  $form['remote_type'] = array(
+    '#title' => 'Remote Content Type',
+    '#description' => 'The machine name of the content type on the remote (Patchbay Webhook) server this this importer should import.',
+    '#type' => 'textfield',
+    '#default_value' => (isset($form['#importer'])) ? $form['#importer']->remote_type : NULL,
+  );
+
   $form['node_type'] = array(
     '#title' => 'Node Type',
     '#type' => 'select',
     '#options' => array('_none' => '- Select -') + db_query("SELECT type, name FROM node_type")->fetchAllKeyed(),
     '#default_value' => (isset($form['#importer'])) ? $form['#importer']->node_type : NULL,
     '#ajax' => array(
-      'callback' => 'webhook_register_importer_ajaxGetNodeType',
+      'callback' => 'webhook_register_importer_admin_form_ajaxGetNodeType',
       'wrapper' => 'webhook_register_importer',
     ),
   );
@@ -161,7 +193,7 @@ function webhook_register_importer_admin_form($form, &$form_state, $importer_id 
 }
 
 function webhook_register_importer_admin_form_ajaxGetNodeType($form, $form_state) {
-  $form_state['#importer']->node_type = $form_state['values']['node_type'];
+  $form_state['#node_type'] = $form_state['values']['node_type'];
   return drupal_rebuild_form('webhook_register_importer_admin_form', $form_state, $form);
 }
 
@@ -184,18 +216,21 @@ function webhook_register_importer_admin_form_submit(&$form, &$form_state) {
       ->fields(array(
         'name' => $form_state['values']['name'],
         'node_type' => $form_state['values']['node_type'],
+        'remote_type' => $form_state['values']['remote_type'],
         'settings' => serialize($settings),
       ))
       ->condition('id', $form['#importer']->id)
       ->execute();
   } else {
-    db_insert('webhook_register_importer')
+    $form['#importer']->id = db_insert('webhook_register_importer')
       ->fields(array(
         'name' => $form_state['values']['name'],
         'node_type' => $form_state['values']['node_type'],
+        'remote_type' => $form_state['values']['remote_type'],
         'settings' => serialize($settings),
       ))
       ->execute();
     drupal_set_message('Importer created.');
   }
+  $form_state['redirect'] = "admin/config/services/webhook-register/importer/{$form['#importer']->id}";
 }

@@ -13,6 +13,11 @@ function webhook_register_schema() {
         'length' => 16,
         'not null' => TRUE,
       ),
+      'importer' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
       'nid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
@@ -21,6 +26,12 @@ function webhook_register_schema() {
       'hash' => array(
         'type' => 'varchar',
         'length' => 32,
+        'not null' => TRUE,
+      ),
+      'timestamp' => array(
+        'type' => 'int',
+        'length' => 11,
+        'unsigned' => TRUE,
         'not null' => TRUE,
       ),
     ),

@@ -140,7 +140,9 @@ function webhook_register_receive_data() {
       ->key(array('guid' => $array['guid']))
       ->fields(array(
         'nid' => $node->nid,
+        'importer' => $importer->id,
         'hash' => 'hash',
+        'timestamp' => time(),
       ))
       ->execute();
   }

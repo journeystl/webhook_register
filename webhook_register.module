@@ -5,23 +5,20 @@
  */
 function webhook_register_menu() {
   // Configure webhook_register.
-  $items['admin/webhook-register'] = array(
-    'title' => 'Configure',
+  $items['admin/config/services/webhook-register'] = array(
+    'title' => 'Webhook Register',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('webhook_register_config_form'),
     'access arguments' => array('manage webhook_register'),
     'type' => MENU_NORMAL_ITEM,
   );
-  $items['admin/webhook-register/config'] = array(
+  $items['admin/config/services/webhook-register/config'] = array(
     'title' => 'Configure',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('webhook_register_config_form'),
-    'access arguments' => array('manage webhook_register'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
   // Show all importers.
-  $items['admin/webhook-register/importers'] = array(
+  $items['admin/config/services/webhook-register/importers'] = array(
     'title' => 'Importers',
     'page callback' => 'webhook_register_importers',
     'access arguments' => array('manage webhook_register'),
@@ -30,12 +27,21 @@ function webhook_register_menu() {
   );
 
   // Add/edit an importer.
-  $items['admin/webhook-register/importer'] = array(
+  $items['admin/config/services/webhook-register/importer'] = array(
     'page callback' => 'drupal_get_form',
     'page arguments' => array('webhook_register_importer_admin_form'),
     'access arguments' => array('manage webhook_register'),
     'type' => MENU_CALLBACK,
     'file' => 'includes/importer.admin.inc',
+  );
+
+  // View history for an importer.
+  $items['admin/config/services/webhook-register/history/%'] = array(
+    'page callback' => 'webhook_register_importer_history',
+    'page arguments' => array(5),
+    'access arguments' => array('manage webhook_register'),
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/importer.history.inc',
   );
 
   // Webhook receive URL. Accept a new piece of data from Patchbay.
