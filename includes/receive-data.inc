@@ -58,6 +58,13 @@ function webhook_register_receive_data() {
 
           switch ($field_info_field['type']) {
 
+            // This media item should reference an existing node.
+            // The value here should equate to the local GUID of the target.
+            case 'entityreference':
+              $reference_nid = db_query("SELECT nid FROM webhook_register_hash WHERE guid = :guid", array(':guid' => $val))->fetchColumn();
+              $node->{$field_name}[LANGUAGE_NONE][$key]['target_id'] = $reference_nid;
+              break;
+
             case 'file':
             case 'image':
               $save_file_result = webhook_register_receive_data_saveFile($val);

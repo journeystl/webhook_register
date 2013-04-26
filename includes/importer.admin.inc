@@ -116,17 +116,17 @@ function webhook_register_importer_admin_form($form, &$form_state, $importer_id 
     'title' => array(
       '#title' => 'Title',
       '#type' => 'textfield',
-      '#default_value' => $importer_settings['properties']['title'],
+      '#default_value' => (isset($importer_settings['properties'])) ? $importer_settings['properties']['title'] : NULL,
     ),
     'status' => array(
       '#title' => 'Published',
       '#type' => 'textfield',
-      '#default_value' => $importer_settings['properties']['status'],
+      '#default_value' => (isset($importer_settings['properties'])) ? $importer_settings['properties']['status'] : NULL,
     ),
     'sticky' => array(
       '#title' => 'Sticky',
       '#type' => 'textfield',
-      '#default_value' => $importer_settings['properties']['sticky'],
+      '#default_value' => (isset($importer_settings['properties'])) ? $importer_settings['properties']['sticky'] : NULL,
     ),
   );
 
@@ -204,13 +204,18 @@ function webhook_register_importer_admin_form_submit(&$form, &$form_state) {
   $settings['properties'] = $form_state['values']['properties'];
 
   // Add fields to settings.
-  $settings['fields'] = $form_state['values']['fields'];
+  if (isset($form_state['values']['fields'])) {
+    $settings['fields'] = $form_state['values']['fields'];
+  }
 
   // Add field collections to settings.
-  $settings['field_collections'] = $form_state['values']['field_collections'];
+  if (isset($form_state['values']['field_collections'])) {
+    $settings['field_collections'] = $form_state['values']['field_collections'];
+  }
 
   // Update the database.
   if (isset($form['#importer']->id)) {
+    $id = $form['#importer']->id;
     drupal_set_message('Importer updated.');
     db_update('webhook_register_importer')
       ->fields(array(
@@ -222,7 +227,7 @@ function webhook_register_importer_admin_form_submit(&$form, &$form_state) {
       ->condition('id', $form['#importer']->id)
       ->execute();
   } else {
-    $form['#importer']->id = db_insert('webhook_register_importer')
+    $id = db_insert('webhook_register_importer')
       ->fields(array(
         'name' => $form_state['values']['name'],
         'node_type' => $form_state['values']['node_type'],
@@ -232,5 +237,5 @@ function webhook_register_importer_admin_form_submit(&$form, &$form_state) {
       ->execute();
     drupal_set_message('Importer created.');
   }
-  $form_state['redirect'] = "admin/config/services/webhook-register/importer/{$form['#importer']->id}";
+  $form_state['redirect'] = "admin/config/services/webhook-register/importer/{$id}";
 }
